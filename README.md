@@ -1,38 +1,130 @@
-# NOTE: this repository is no longer maintained; PRs and issues will probably be ignored. If you are interested in taking over development/maintainership of image-match, please contact me at the email address in my public profile. Thank you!
+# image-match
 
-[![PyPI](https://img.shields.io/pypi/status/image-match.svg?maxAge=2592000)](https://pypi.python.org/pypi/image-match)
-[![PyPI](https://img.shields.io/pypi/v/image-match.svg)](https://pypi.python.org/pypi/image-match)
-[![Documentation Status](https://readthedocs.org/projects/image-match/badge/?version=latest)](https://image-match.readthedocs.org/en/latest/)
-[![codecov](https://codecov.io/gh/edjolabs/image-match/branch/master/graph/badge.svg)](https://codecov.io/gh/edjolabs/image-match)
+A Python library for finding approximate image matches from a corpus, backed by Elasticsearch.
 
-![image-match](https://cloud.githubusercontent.com/assets/6517700/17741093/41040a64-649b-11e6-8499-48b78ddca56b.png)
+This is a maintained fork of the original [image-match](https://github.com/edjo-labs/image-match) library (no longer maintained upstream).
 
-image-match is a simple (now Python 3!) package for finding approximate image matches from a
-corpus.  It is similar, for instance, to [pHash](http://www.phash.org/), but
-includes a database backend that easily scales to billions of images and
-supports sustained high rates of image insertion: up to 10,000 images/s on our
-cluster!
+Based on the paper [_An image signature for any kind of image_, Wong et al](http://www.cs.cmu.edu/~hcwong/Pdfs/icip02.ps).
 
-**PLEASE NOTE:** This algorithm is intended to find nearly duplicate images -- think copyright
-violation detection.  It is **NOT** intended to find images that are conceptually similar.
-For more explanation, see [this issue](https://github.com/edjo-labs/image-match/issues/62) or
-[this video](https://www.youtube.com/watch?v=DfWLBzArzKE).
+**Note:** This algorithm finds nearly duplicate images (e.g. copyright violation detection). It is **not** intended to find conceptually similar images.
 
-Based on the paper [_An image signature for any kind of image_, Wong et
-al](http://www.cs.cmu.edu/~hcwong/Pdfs/icip02.ps).  There is an existing
-[reference implementation](https://www.pureftpd.org/project/libpuzzle) which
-may be more suited to your needs.
+---
 
-The folks over at [Pavlov](https://usepavlov.com/) have released an excellent
-[containerized version of image-match](https://github.com/pavlovml/match) for
-easy scaling and deployment.
+## Requirements
+
+- Python 3.12+
+- Elasticsearch 7.x or 8.x
+
+---
+
+## Installation
+
+Choose the extra matching your Elasticsearch version:
+
+```bash
+# Elasticsearch 7.x
+pip install "image_match[es7] @ git+https://github.com/maksym-lukianenko/image-match.git@master"
+
+# Elasticsearch 8.x
+pip install "image_match[es8] @ git+https://github.com/maksym-lukianenko/image-match.git@master"
+```
+
+---
 
 ## Quick start
 
-### [Install and setup image-match](http://image-match.readthedocs.io/en/latest/start.html)
+### Generate a signature
 
-Once you're up and running, read these two (short) sections of the documentation to get a feel
-for what image-match is capable of:
+```python
+from image_match.goldberg import ImageSignature
 
-### [Image signatures](http://image-match.readthedocs.io/en/latest/signatures.html)
-### [Storing and searching images](http://image-match.readthedocs.io/en/latest/searches.html)
+gis = ImageSignature()
+sig = gis.generate_signature('https://example.com/image.jpg')
+```
+
+### Store and search with Elasticsearch 7.x
+
+```python
+from elasticsearch import Elasticsearch
+from image_match.elasticsearch_driver_es7 import SignatureES7
+
+es = Elasticsearch()
+ses = SignatureES7(es=es, index='images')
+
+ses.add_image('https://example.com/image.jpg')
+results = ses.search_image('https://example.com/similar.jpg')
+# [{'path': '...', 'dist': 0.12, 'score': 0.88, 'id': '...'}]
+```
+
+### Store and search with Elasticsearch 8.x
+
+```python
+from elasticsearch import Elasticsearch
+from image_match.elasticsearch_driver_es8 import SignatureES8
+
+es = Elasticsearch(['http://localhost:9200'])
+ses = SignatureES8(es=es, index='images')
+
+ses.add_image('https://example.com/image.jpg')
+results = ses.search_image('https://example.com/similar.jpg')
+```
+
+### Add images from file or bytestream
+
+```python
+# From file path
+ses.add_image('path/to/image.jpg')
+
+# From bytestream
+with open('image.jpg', 'rb') as f:
+    ses.add_image('my-image-key', img=f.read(), bytestream=True)
+
+# With metadata
+ses.add_image('path/to/image.jpg', metadata={'tenant_id': 'acme'})
+```
+
+### Search with metadata filter
+
+```python
+# ES 7.x
+results = ses.search_image(
+    'path/to/query.jpg',
+    pre_filter={"term": {"image.metadata.tenant_id": "acme"}}
+)
+
+# ES 8.x
+results = ses.search_image(
+    'path/to/query.jpg',
+    pre_filter={"term": {"metadata.tenant_id": "acme"}}
+)
+```
+
+### Backward compatibility
+
+Code using the old `SignatureES` class continues to work with a deprecation warning:
+
+```python
+from image_match.elasticsearch_driver import SignatureES  # DeprecationWarning
+ses = SignatureES(es=es, index='images')  # delegates to SignatureES7
+```
+
+---
+
+## Running tests locally
+
+Requires Docker.
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -e ".[es7,test]"
+
+make test-es7   # runs ES 7.x suite
+make test-es8   # runs ES 8.x suite
+make test       # runs both
+```
+
+---
+
+## CI
+
+GitHub Actions runs both ES7 and ES8 test suites on every push and pull request to `master`.
