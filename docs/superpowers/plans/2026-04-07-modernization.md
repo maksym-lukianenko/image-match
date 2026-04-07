@@ -1,6 +1,6 @@
 # image-match Modernization Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Modernize the image-match library to Python 3.12, replace `setup.py` with `pyproject.toml`, remove `six`, retire the MongoDB driver, and split the Elasticsearch driver into explicit `SignatureES7` and `SignatureES8` classes.
 
@@ -18,7 +18,7 @@
 - Create: `pyproject.toml`
 - Delete: `setup.py`, `pytest.ini`
 
-- [ ] **Step 1: Create pyproject.toml**
+- [x] **Step 1: Create pyproject.toml**
 
 ```toml
 [build-system]
@@ -74,13 +74,13 @@ select = ["E", "F", "W", "I"]
 ignore = ["E501"]
 ```
 
-- [ ] **Step 2: Delete setup.py and pytest.ini**
+- [x] **Step 2: Delete setup.py and pytest.ini**
 
 ```bash
 rm setup.py pytest.ini
 ```
 
-- [ ] **Step 3: Verify install works**
+- [x] **Step 3: Verify install works**
 
 ```bash
 pip install -e .[es7,test]
@@ -88,7 +88,7 @@ pip install -e .[es7,test]
 
 Expected: installs cleanly with no errors. `elasticsearch` 7.x and `pytest` are available.
 
-- [ ] **Step 4: Verify pytest discovers tests**
+- [x] **Step 4: Verify pytest discovers tests**
 
 ```bash
 pytest tests/test_goldberg.py --collect-only
@@ -96,7 +96,7 @@ pytest tests/test_goldberg.py --collect-only
 
 Expected: lists test functions without errors.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add pyproject.toml
@@ -111,7 +111,7 @@ git commit -m "build: replace setup.py with pyproject.toml, require Python 3.12"
 **Files:**
 - Modify: `image_match/goldberg.py`
 
-- [ ] **Step 1: Run existing goldberg tests to establish a baseline**
+- [x] **Step 1: Run existing goldberg tests to establish a baseline**
 
 ```bash
 pytest tests/test_goldberg.py -v
@@ -119,7 +119,7 @@ pytest tests/test_goldberg.py -v
 
 Expected: all tests pass (or skip — some download images from the internet).
 
-- [ ] **Step 2: Replace six imports and usages in goldberg.py**
+- [x] **Step 2: Replace six imports and usages in goldberg.py**
 
 Remove the import at the top of `image_match/goldberg.py`:
 ```python
@@ -150,7 +150,7 @@ elif type(image_or_path) is np.ndarray:
 elif isinstance(image_or_path, np.ndarray):
 ```
 
-- [ ] **Step 3: Remove explicit (object) base class**
+- [x] **Step 3: Remove explicit (object) base class**
 
 ```python
 # OLD:
@@ -160,7 +160,7 @@ class ImageSignature(object):
 class ImageSignature:
 ```
 
-- [ ] **Step 4: Run tests to verify nothing broke**
+- [x] **Step 4: Run tests to verify nothing broke**
 
 ```bash
 pytest tests/test_goldberg.py -v
@@ -168,7 +168,7 @@ pytest tests/test_goldberg.py -v
 
 Expected: same results as Step 1.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add image_match/goldberg.py
@@ -182,7 +182,7 @@ git commit -m "refactor: remove six dependency, use Python 3.12 str/bytes idioms
 **Files:**
 - Modify: `image_match/signature_database_base.py`
 
-- [ ] **Step 1: Replace type() checks with isinstance() in signature_database_base.py**
+- [x] **Step 1: Replace type() checks with isinstance() in signature_database_base.py**
 
 In `__init__`, replace all three type checks (around lines 167-180):
 ```python
@@ -218,7 +218,7 @@ class SignatureDatabaseBase(object):
 class SignatureDatabaseBase:
 ```
 
-- [ ] **Step 2: Run goldberg tests to verify**
+- [x] **Step 2: Run goldberg tests to verify**
 
 ```bash
 pytest tests/test_goldberg.py -v
@@ -226,7 +226,7 @@ pytest tests/test_goldberg.py -v
 
 Expected: all tests still pass.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add image_match/signature_database_base.py
@@ -240,13 +240,13 @@ git commit -m "refactor: use isinstance() and implicit object base in signature_
 **Files:**
 - Delete: `image_match/mongodb_driver.py`
 
-- [ ] **Step 1: Delete the MongoDB driver**
+- [x] **Step 1: Delete the MongoDB driver**
 
 ```bash
 git rm image_match/mongodb_driver.py
 ```
 
-- [ ] **Step 2: Verify no remaining imports of mongodb_driver**
+- [x] **Step 2: Verify no remaining imports of mongodb_driver**
 
 ```bash
 grep -r "mongodb_driver" image_match/ tests/
@@ -254,7 +254,7 @@ grep -r "mongodb_driver" image_match/ tests/
 
 Expected: no output.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git commit -m "feat: retire MongoDB driver"
@@ -267,7 +267,7 @@ git commit -m "feat: retire MongoDB driver"
 **Files:**
 - Create: `image_match/_es_base.py`
 
-- [ ] **Step 1: Create image_match/_es_base.py with full content**
+- [x] **Step 1: Create image_match/_es_base.py with full content**
 
 ```python
 from abc import abstractmethod
@@ -345,7 +345,7 @@ class _SignatureESBase(SignatureDatabaseBase):
             self.es.delete(index=self.index, id=id_tag)
 ```
 
-- [ ] **Step 2: Verify the module imports cleanly**
+- [x] **Step 2: Verify the module imports cleanly**
 
 ```bash
 python -c "from image_match._es_base import _SignatureESBase; print('OK')"
@@ -353,7 +353,7 @@ python -c "from image_match._es_base import _SignatureESBase; print('OK')"
 
 Expected: `OK`
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add image_match/_es_base.py
@@ -367,7 +367,7 @@ git commit -m "feat: add _SignatureESBase shared ES driver base class"
 **Files:**
 - Create: `image_match/elasticsearch_driver_es7.py`
 
-- [ ] **Step 1: Write the failing import test**
+- [x] **Step 1: Write the failing import test**
 
 ```bash
 python -c "from image_match.elasticsearch_driver_es7 import SignatureES7"
@@ -375,7 +375,7 @@ python -c "from image_match.elasticsearch_driver_es7 import SignatureES7"
 
 Expected: `ModuleNotFoundError`
 
-- [ ] **Step 2: Create image_match/elasticsearch_driver_es7.py**
+- [x] **Step 2: Create image_match/elasticsearch_driver_es7.py**
 
 ```python
 from datetime import datetime
@@ -444,7 +444,7 @@ class SignatureES7(_SignatureESBase):
         )
 ```
 
-- [ ] **Step 3: Verify the module imports cleanly**
+- [x] **Step 3: Verify the module imports cleanly**
 
 ```bash
 python -c "from image_match.elasticsearch_driver_es7 import SignatureES7; print('OK')"
@@ -452,7 +452,7 @@ python -c "from image_match.elasticsearch_driver_es7 import SignatureES7; print(
 
 Expected: `OK`
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add image_match/elasticsearch_driver_es7.py
@@ -466,7 +466,7 @@ git commit -m "feat: add SignatureES7 for Elasticsearch 7.x"
 **Files:**
 - Create: `image_match/elasticsearch_driver_es8.py`
 
-- [ ] **Step 1: Write the failing import test**
+- [x] **Step 1: Write the failing import test**
 
 ```bash
 python -c "from image_match.elasticsearch_driver_es8 import SignatureES8"
@@ -474,7 +474,7 @@ python -c "from image_match.elasticsearch_driver_es8 import SignatureES8"
 
 Expected: `ModuleNotFoundError`
 
-- [ ] **Step 2: Create image_match/elasticsearch_driver_es8.py**
+- [x] **Step 2: Create image_match/elasticsearch_driver_es8.py**
 
 ```python
 from datetime import datetime
@@ -542,7 +542,7 @@ class SignatureES8(_SignatureESBase):
         )
 ```
 
-- [ ] **Step 3: Verify the module imports cleanly**
+- [x] **Step 3: Verify the module imports cleanly**
 
 ```bash
 python -c "from image_match.elasticsearch_driver_es8 import SignatureES8; print('OK')"
@@ -550,7 +550,7 @@ python -c "from image_match.elasticsearch_driver_es8 import SignatureES8; print(
 
 Expected: `OK`
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add image_match/elasticsearch_driver_es8.py
@@ -564,7 +564,7 @@ git commit -m "feat: add SignatureES8 for Elasticsearch 8.x"
 **Files:**
 - Modify: `image_match/elasticsearch_driver.py`
 
-- [ ] **Step 1: Replace the full content of elasticsearch_driver.py**
+- [x] **Step 1: Replace the full content of elasticsearch_driver.py**
 
 ```python
 """Backward-compatibility shim for image_match.elasticsearch_driver.
@@ -594,7 +594,7 @@ def SignatureES(*args, **kwargs):
 __all__ = ['SignatureES', 'SignatureES7', 'SignatureES8']
 ```
 
-- [ ] **Step 2: Update image_match/__init__.py to export the new driver classes**
+- [x] **Step 2: Update image_match/__init__.py to export the new driver classes**
 
 ```python
 __author__ = 'ryan'
@@ -606,7 +606,7 @@ from image_match.elasticsearch_driver_es8 import SignatureES8
 __all__ = ['SignatureES7', 'SignatureES8']
 ```
 
-- [ ] **Step 4: Verify backward-compat import still works**
+- [x] **Step 4: Verify backward-compat import still works**
 
 ```bash
 python -c "
@@ -619,7 +619,7 @@ print('Direct imports OK')
 
 Expected: `Direct imports OK`
 
-- [ ] **Step 5: Verify deprecation warning fires for SignatureES on call**
+- [x] **Step 5: Verify deprecation warning fires for SignatureES on call**
 
 ```bash
 python -c "
@@ -633,7 +633,7 @@ with warnings.catch_warnings(record=True) as w:
 
 Expected: `Import OK, warning fires on call (not import)`
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add image_match/elasticsearch_driver.py image_match/__init__.py
@@ -647,7 +647,7 @@ git commit -m "feat: convert elasticsearch_driver.py to backward-compat re-expor
 **Files:**
 - Modify: `tests/test_elasticsearch_driver.py`
 
-- [ ] **Step 1: Replace the full content of tests/test_elasticsearch_driver.py**
+- [x] **Step 1: Replace the full content of tests/test_elasticsearch_driver.py**
 
 ```python
 import hashlib
@@ -887,7 +887,7 @@ def test_duplicate_removal(ses):
     assert len(r) == 1
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add tests/test_elasticsearch_driver.py
@@ -901,7 +901,7 @@ git commit -m "test: update ES driver test to use SignatureES7, add deprecation 
 **Files:**
 - Modify: `tests/test_elasticsearch_driver_metadata_as_nested.py`
 
-- [ ] **Step 1: Replace the full content**
+- [x] **Step 1: Replace the full content**
 
 ```python
 import hashlib
@@ -1029,7 +1029,7 @@ def _nested_filter(tenant_id, project_id):
     ]
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add tests/test_elasticsearch_driver_metadata_as_nested.py
@@ -1043,7 +1043,7 @@ git commit -m "test: update nested metadata test to use SignatureES7 directly"
 **Files:**
 - Create: `tests/test_elasticsearch_driver_es8.py`
 
-- [ ] **Step 1: Create tests/test_elasticsearch_driver_es8.py**
+- [x] **Step 1: Create tests/test_elasticsearch_driver_es8.py**
 
 ```python
 import hashlib
@@ -1256,7 +1256,7 @@ def test_duplicate_removal(ses):
     assert len(r) == 1
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add tests/test_elasticsearch_driver_es8.py
@@ -1270,7 +1270,7 @@ git commit -m "test: add ES8 integration test suite"
 **Files:**
 - Modify: `image_match/goldberg.py`
 
-- [ ] **Step 1: Add numpy import alias (already imported, just ensure it's there) and add type hints to generate_signature**
+- [x] **Step 1: Add numpy import alias (already imported, just ensure it's there) and add type hints to generate_signature**
 
 Find the `generate_signature` method signature and update it:
 ```python
@@ -1281,7 +1281,7 @@ def generate_signature(self, path_or_image, bytestream=False):
 def generate_signature(self, path_or_image: str | np.ndarray, bytestream: bool = False) -> np.ndarray:
 ```
 
-- [ ] **Step 2: Add type hints to preprocess_image**
+- [x] **Step 2: Add type hints to preprocess_image**
 
 ```python
 # OLD:
@@ -1293,7 +1293,7 @@ def preprocess_image(image_or_path, bytestream=False, handle_mpo=False):
 def preprocess_image(image_or_path: str | bytes | np.ndarray, bytestream: bool = False, handle_mpo: bool = False) -> np.ndarray:
 ```
 
-- [ ] **Step 3: Add type hints to normalized_distance instance method**
+- [x] **Step 3: Add type hints to normalized_distance instance method**
 
 Find the `normalized_distance` method on `ImageSignature` (not the module-level function) and update it:
 ```python
@@ -1304,7 +1304,7 @@ def normalized_distance(self, target_img, img):
 def normalized_distance(self, target_img: np.ndarray, img: np.ndarray) -> float:
 ```
 
-- [ ] **Step 4: Run goldberg tests**
+- [x] **Step 4: Run goldberg tests**
 
 ```bash
 pytest tests/test_goldberg.py -v
@@ -1312,7 +1312,7 @@ pytest tests/test_goldberg.py -v
 
 Expected: all tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add image_match/goldberg.py
@@ -1326,7 +1326,7 @@ git commit -m "feat: add type hints to ImageSignature public API"
 **Files:**
 - Modify: `image_match/signature_database_base.py`
 
-- [ ] **Step 1: Add numpy import and type hints to add_image**
+- [x] **Step 1: Add numpy import and type hints to add_image**
 
 ```python
 # OLD:
@@ -1337,7 +1337,7 @@ def add_image(self, path: str, img: np.ndarray | None = None, bytestream: bool =
               metadata: dict | None = None, refresh_after: bool = False) -> None:
 ```
 
-- [ ] **Step 2: Add type hints to search_image**
+- [x] **Step 2: Add type hints to search_image**
 
 ```python
 # OLD:
@@ -1348,7 +1348,7 @@ def search_image(self, path: str, all_orientations: bool = False, bytestream: bo
                  pre_filter: dict | list | None = None) -> list[dict]:
 ```
 
-- [ ] **Step 3: Run goldberg tests**
+- [x] **Step 3: Run goldberg tests**
 
 ```bash
 pytest tests/test_goldberg.py -v
@@ -1356,7 +1356,7 @@ pytest tests/test_goldberg.py -v
 
 Expected: all tests pass.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add image_match/signature_database_base.py
@@ -1372,7 +1372,7 @@ git commit -m "feat: add type hints to SignatureDatabaseBase public API"
 - Modify: `image_match/elasticsearch_driver_es7.py`
 - Modify: `image_match/elasticsearch_driver_es8.py`
 
-- [ ] **Step 1: Add Elasticsearch type import and __init__ type hints to _es_base.py**
+- [x] **Step 1: Add Elasticsearch type import and __init__ type hints to _es_base.py**
 
 At the top of `_es_base.py`, add:
 ```python
@@ -1390,7 +1390,7 @@ def __init__(self, es: Elasticsearch, index: str = 'images', doc_type: str = 'im
              timeout: str = '10s', size: int = 100, *args, **kwargs):
 ```
 
-- [ ] **Step 2: Add type hints to SignatureES7.__init__ and delete_duplicates**
+- [x] **Step 2: Add type hints to SignatureES7.__init__ and delete_duplicates**
 
 In `elasticsearch_driver_es7.py`, add the import at top:
 ```python
@@ -1401,7 +1401,7 @@ The `__init__` is inherited from `_SignatureESBase` and already typed — no cha
 
 Add return type to `delete_duplicates` in `_es_base.py` (already done in Task 5 — verify it has `-> None`).
 
-- [ ] **Step 3: Add Elasticsearch import to elasticsearch_driver_es8.py**
+- [x] **Step 3: Add Elasticsearch import to elasticsearch_driver_es8.py**
 
 ```python
 from elasticsearch import Elasticsearch
@@ -1409,7 +1409,7 @@ from elasticsearch import Elasticsearch
 
 The `__init__` is inherited — no change needed.
 
-- [ ] **Step 4: Verify imports clean**
+- [x] **Step 4: Verify imports clean**
 
 ```bash
 python -c "
@@ -1421,7 +1421,7 @@ print('OK')
 
 Expected: `OK`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add image_match/_es_base.py image_match/elasticsearch_driver_es7.py image_match/elasticsearch_driver_es8.py
@@ -1435,7 +1435,7 @@ git commit -m "feat: add type hints to ES driver public API"
 **Files:**
 - Create: `.github/workflows/ci.yml`
 
-- [ ] **Step 1: Create the GitHub Actions workflow**
+- [x] **Step 1: Create the GitHub Actions workflow**
 
 ```bash
 mkdir -p .github/workflows
@@ -1522,7 +1522,7 @@ jobs:
         run: pytest tests/test_goldberg.py tests/test_elasticsearch_driver_es8.py --cov=image_match
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add .github/workflows/ci.yml
@@ -1536,14 +1536,14 @@ git commit -m "ci: replace Travis CI with GitHub Actions, add es7 and es8 jobs"
 **Files:**
 - Delete: `.travis.yml`
 
-- [ ] **Step 1: Delete .travis.yml**
+- [x] **Step 1: Delete .travis.yml**
 
 ```bash
 git rm .travis.yml
 git commit -m "ci: delete .travis.yml (replaced by GitHub Actions)"
 ```
 
-- [ ] **Step 2: Run ruff to verify no linting errors**
+- [x] **Step 2: Run ruff to verify no linting errors**
 
 ```bash
 ruff check .
@@ -1551,7 +1551,7 @@ ruff check .
 
 Expected: no output (no errors).
 
-- [ ] **Step 3: If ruff reports errors, fix them**
+- [x] **Step 3: If ruff reports errors, fix them**
 
 Common issues ruff catches:
 - Unused imports: remove them
@@ -1565,7 +1565,7 @@ ruff check .
 
 Expected: no output.
 
-- [ ] **Step 4: Commit any ruff fixes**
+- [x] **Step 4: Commit any ruff fixes**
 
 ```bash
 git add -p
@@ -1579,11 +1579,11 @@ git commit -m "style: fix ruff linting issues"
 **Files:**
 - Modify: `docs/superpowers/specs/2026-04-07-modernization-design.md`
 
-- [ ] **Step 1: Tick all checkboxes in the spec**
+- [x] **Step 1: Tick all checkboxes in the spec**
 
-Open `docs/superpowers/specs/2026-04-07-modernization-design.md` and change every `- [ ]` to `- [x]`.
+Open `docs/superpowers/specs/2026-04-07-modernization-design.md` and change every `- [x]` to `- [x]`.
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add docs/superpowers/specs/2026-04-07-modernization-design.md
