@@ -579,15 +579,14 @@ class ImageSignature:
 
         return None
 
-    @staticmethod
-    def normalized_distance(_a: np.ndarray, _b: np.ndarray) -> float:
+    def normalized_distance(self, target_img: np.ndarray, img: np.ndarray) -> float:
         """Compute normalized distance between two points.
 
         Computes || b - a || / ( ||b|| + ||a||)
 
         Args:
-            _a (numpy.ndarray): array of size m
-            _b (numpy.ndarray): array of size m
+            target_img (numpy.ndarray): array of size m
+            img (numpy.ndarray): array of size m
 
         Returns:
             normalized distance between signatures (float)
@@ -599,8 +598,8 @@ class ImageSignature:
             0.22095170140933634
 
         """
-        b = _b.astype(int)
-        a = _a.astype(int)
+        b = img.astype(int)
+        a = target_img.astype(int)
         norm_diff = np.linalg.norm(b - a)
         norm1 = np.linalg.norm(b)
         norm2 = np.linalg.norm(a)
