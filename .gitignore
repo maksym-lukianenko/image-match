@@ -59,5 +59,9 @@ image_match/web/static/tmp/
 
 *.jpg
 
+# Virtualenvs
+venv/
+.venv/
+
 # IDE
 .idea/
