@@ -31,7 +31,7 @@ def index_name():
 
 @pytest.fixture(scope='function', autouse=True)
 def setup_index(request, index_name):
-    es = Elasticsearch()
+    es = Elasticsearch(['http://localhost:9200'])
     if es.indices.exists(index=index_name):
         es.indices.delete(index=index_name)
     es.indices.create(index=index_name, mappings=MAPPINGS)
@@ -54,7 +54,7 @@ def cleanup_index(request, es, index_name):
 
 @pytest.fixture
 def es():
-    return Elasticsearch()
+    return Elasticsearch(['http://localhost:9200'])
 
 
 @pytest.fixture
