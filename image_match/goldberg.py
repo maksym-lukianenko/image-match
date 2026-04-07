@@ -1,15 +1,17 @@
-from skimage.color import rgb2gray
-from skimage.io import imread
 from PIL import Image
 from PIL.MpoImagePlugin import MpoImageFile
+from skimage.color import rgb2gray
+from skimage.io import imread
+
 try:
     from cairosvg import svg2png
 except ImportError:
     pass
-from io import BytesIO
-import numpy as np
 import xml.etree
 import xml.etree.ElementTree
+from io import BytesIO
+
+import numpy as np
 
 
 class CorruptImageError(RuntimeError):

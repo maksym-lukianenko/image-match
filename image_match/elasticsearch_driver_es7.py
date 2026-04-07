@@ -29,7 +29,7 @@ class SignatureES7(_SignatureESBase):
         )['hits']['hits']
 
     def search_single_record(self, rec, pre_filter=None):
-        path = rec.pop('path')
+        rec.pop('path')
         signature = rec.pop('signature')
         rec.pop('metadata', None)
 

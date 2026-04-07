@@ -1,7 +1,9 @@
-from image_match.goldberg import ImageSignature
 from itertools import product
 from operator import itemgetter
+
 import numpy as np
+
+from image_match.goldberg import ImageSignature
 
 
 class SignatureDatabaseBase:
@@ -274,8 +276,8 @@ class SignatureDatabaseBase:
             # generate the signature
             transformed_record = make_record(transformed_img, self.gis, self.k, self.N)
 
-            l = self.search_single_record(transformed_record, pre_filter=pre_filter)
-            result.extend(l)
+            matches = self.search_single_record(transformed_record, pre_filter=pre_filter)
+            result.extend(matches)
 
         ids = set()
         unique = []

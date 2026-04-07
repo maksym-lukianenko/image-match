@@ -1,10 +1,10 @@
 import hashlib
 import os
 from time import sleep
+from urllib.request import urlretrieve
 
 import pytest
-from elasticsearch import Elasticsearch, ConnectionError, NotFoundError, RequestError
-from urllib.request import urlretrieve
+from elasticsearch import ConnectionError, Elasticsearch, NotFoundError, RequestError
 
 from image_match.elasticsearch_driver_es7 import SignatureES7
 

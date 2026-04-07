@@ -1,11 +1,11 @@
 import hashlib
 import os
 from time import sleep
+from urllib.request import urlretrieve
 
 import pytest
-from elasticsearch import Elasticsearch, ConnectionError, NotFoundError
+from elasticsearch import ConnectionError, Elasticsearch
 from PIL import Image
-from urllib.request import urlretrieve
 
 from image_match.elasticsearch_driver_es8 import SignatureES8
 
