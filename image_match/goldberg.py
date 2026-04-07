@@ -95,7 +95,7 @@ class ImageSignature:
 
         self.handle_mpo = True
 
-    def generate_signature(self, path_or_image, bytestream=False):
+    def generate_signature(self, path_or_image: str | np.ndarray, bytestream: bool = False) -> np.ndarray:
         """Generates an image signature.
 
         See section 3 of Goldberg, et al.
@@ -190,7 +190,7 @@ class ImageSignature:
         return np.ravel(diff_mat).astype('int8')
 
     @staticmethod
-    def preprocess_image(image_or_path, bytestream=False, handle_mpo=False):
+    def preprocess_image(image_or_path: str | bytes | np.ndarray, bytestream: bool = False, handle_mpo: bool = False) -> np.ndarray:
         """Loads an image and converts to greyscale.
 
         Corresponds to 'step 1' in Goldberg's paper
@@ -580,7 +580,7 @@ class ImageSignature:
         return None
 
     @staticmethod
-    def normalized_distance(_a, _b):
+    def normalized_distance(_a: np.ndarray, _b: np.ndarray) -> float:
         """Compute normalized distance between two points.
 
         Computes || b - a || / ( ||b|| + ||a||)
