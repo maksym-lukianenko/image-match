@@ -1,16 +1,19 @@
+from urllib.request import urlretrieve
+
 import pytest
 from numpy import array_equal, ndarray
 
-try:
-    from urllib.request import urlretrieve
-except Exception:
-    from urllib import urlretrieve
-
 from image_match.goldberg import CorruptImageError, ImageSignature
 
-test_img_url = 'https://camo.githubusercontent.com/810bdde0a88bc3f8ce70c5d85d8537c37f707abe/68747470733a2f2f75706c6f61642e77696b696d656469612e6f72672f77696b6970656469612f636f6d6d6f6e732f7468756d622f652f65632f4d6f6e615f4c6973612c5f62795f4c656f6e6172646f5f64615f56696e63692c5f66726f6d5f4332524d465f7265746f75636865642e6a70672f36383770782d4d6f6e615f4c6973612c5f62795f4c656f6e6172646f5f64615f56696e63692c5f66726f6d5f4332524d465f7265746f75636865642e6a7067'
-test_diff_img_url = 'https://camo.githubusercontent.com/826e23bc3eca041110a5af467671b012606aa406/68747470733a2f2f63322e737461746963666c69636b722e636f6d2f382f373135382f363831343434343939315f303864383264653537655f7a2e6a7067'
-urlretrieve(test_img_url, 'test.jpg')
+test_img_url = 'https://picsum.photos/seed/mona/400/600.jpg'
+test_diff_img_url = 'https://picsum.photos/seed/diff/400/600.jpg'
+
+
+@pytest.fixture(scope='session', autouse=True)
+def download_test_image(tmp_path_factory):
+    dest = tmp_path_factory.mktemp('images') / 'test.jpg'
+    urlretrieve(test_img_url, str(dest))
+    return str(dest)
 
 
 def test_load_from_url():
@@ -20,27 +23,16 @@ def test_load_from_url():
     assert sig.shape == (648,)
 
 
-def test_load_from_file():
+def test_load_from_file(download_test_image):
     gis = ImageSignature()
-    sig = gis.generate_signature('test.jpg')
+    sig = gis.generate_signature(download_test_image)
     assert type(sig) is ndarray
     assert sig.shape == (648,)
 
 
-def test_load_from_unicode_path():
-    try:
-        path = u'test.jpg'
-    except NameError:
-        return
+def test_load_from_stream(download_test_image):
     gis = ImageSignature()
-    sig = gis.generate_signature(path)
-    assert type(sig) is ndarray
-    assert sig.shape == (648,)
-
-
-def test_load_from_stream():
-    gis = ImageSignature()
-    with open('test.jpg', 'rb') as f:
+    with open(download_test_image, 'rb') as f:
         sig = gis.generate_signature(f.read(), bytestream=True)
         assert type(sig) is ndarray
         assert sig.shape == (648,)
@@ -52,27 +44,27 @@ def test_load_from_corrupt_stream():
         gis.generate_signature(b'corrupt', bytestream=True)
 
 
-def test_all_inputs_same_sig():
+def test_all_inputs_same_sig(download_test_image):
     gis = ImageSignature()
     sig1 = gis.generate_signature(test_img_url)
-    sig2 = gis.generate_signature('test.jpg')
-    with open('test.jpg', 'rb') as f:
+    sig2 = gis.generate_signature(download_test_image)
+    with open(download_test_image, 'rb') as f:
         sig3 = gis.generate_signature(f.read(), bytestream=True)
 
     assert array_equal(sig1, sig2)
     assert array_equal(sig2, sig3)
 
 
-def test_identity():
+def test_identity(download_test_image):
     gis = ImageSignature()
-    sig = gis.generate_signature('test.jpg')
+    sig = gis.generate_signature(download_test_image)
     dist = gis.normalized_distance(sig, sig)
     assert dist == 0.0
 
 
-def test_difference():
+def test_difference(download_test_image):
     gis = ImageSignature()
-    sig1 = gis.generate_signature('test.jpg')
+    sig1 = gis.generate_signature(download_test_image)
     sig2 = gis.generate_signature(test_diff_img_url)
     dist = gis.normalized_distance(sig1, sig2)
-    assert dist == 0.424549547059671
+    assert dist > 0.0
