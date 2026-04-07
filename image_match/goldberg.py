@@ -6,7 +6,6 @@ try:
     from cairosvg import svg2png
 except ImportError:
     pass
-from six import string_types, text_type
 from io import BytesIO
 import numpy as np
 import xml.etree
@@ -17,7 +16,7 @@ class CorruptImageError(RuntimeError):
     pass
 
 
-class ImageSignature(object):
+class ImageSignature:
     """Image signature generator.
 
     Based on the method of Goldberg, et al. Available at http://www.cs.cmu.edu/~hcwong/Pdfs/icip02.ps
@@ -235,10 +234,9 @@ class ImageSignature(object):
                     raise CorruptImageError()
             img = img.convert('RGB')
             return rgb2gray(np.asarray(img, dtype=np.uint8))
-        elif type(image_or_path) in string_types or \
-             type(image_or_path) is text_type:
+        elif isinstance(image_or_path, str):
             return imread(image_or_path, as_gray=True)
-        elif type(image_or_path) is bytes:
+        elif isinstance(image_or_path, bytes):
             try:
                 img = Image.open(image_or_path)
                 arr = np.array(img.convert('RGB'))
@@ -253,7 +251,7 @@ class ImageSignature(object):
                     return rgb2gray(arr)
             else:
                 return rgb2gray(arr)
-        elif type(image_or_path) is np.ndarray:
+        elif isinstance(image_or_path, np.ndarray):
             return rgb2gray(image_or_path)
         else:
             raise TypeError('Path or image required.')
