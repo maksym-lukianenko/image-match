@@ -58,3 +58,6 @@ target/
 image_match/web/static/tmp/
 
 *.jpg
+
+# IDE
+.idea/
