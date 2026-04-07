@@ -4,7 +4,7 @@ from operator import itemgetter
 import numpy as np
 
 
-class SignatureDatabaseBase(object):
+class SignatureDatabaseBase:
     """Base class for storing and searching image signatures in a database
 
     Note:
@@ -164,11 +164,11 @@ class SignatureDatabaseBase(object):
 
         """
         # Check integer inputs
-        if type(k) is not int:
+        if not isinstance(k, int):
             raise TypeError('k should be an integer')
-        if type(N) is not int:
+        if not isinstance(N, int):
             raise TypeError('N should be an integer')
-        if type(n_grid) is not int:
+        if not isinstance(n_grid, int):
             raise TypeError('n_grid should be an integer')
 
         self.k = k
@@ -176,7 +176,7 @@ class SignatureDatabaseBase(object):
         self.n_grid = n_grid
 
         # Check float input
-        if type(distance_cutoff) is not float:
+        if not isinstance(distance_cutoff, float):
             raise TypeError('distance_cutoff should be a float')
         if distance_cutoff < 0.:
             raise ValueError('distance_cutoff should be > 0 (got %r)' % distance_cutoff)
