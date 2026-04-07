@@ -17,14 +17,10 @@ DOC_TYPE = 'image'
 MAPPINGS = {
     "mappings": {
         "properties": {
-            DOC_TYPE: {
+            "path": {"type": "keyword"},
+            "metadata": {
                 "properties": {
-                    "path": {"type": "keyword"},
-                    "metadata": {
-                        "properties": {
-                            "tenant_id": {"type": "keyword"}
-                        }
-                    }
+                    "tenant_id": {"type": "keyword"}
                 }
             }
         }
@@ -180,15 +176,15 @@ def test_lookup_with_filter_by_metadata(ses):
     metadata2 = {'tenant_id': 'bar-2'}
     ses.add_image('test2.jpg', metadata=metadata2, refresh_after=True)
 
-    r = ses.search_image('test1.jpg', pre_filter={"term": {f'{DOC_TYPE}.metadata.tenant_id': "foo"}})
+    r = ses.search_image('test1.jpg', pre_filter={"term": {"metadata.tenant_id": "foo"}})
     assert len(r) == 1
     assert r[0]['metadata'] == metadata
 
-    r = ses.search_image('test1.jpg', pre_filter={"term": {f'{DOC_TYPE}.metadata.tenant_id': "bar-2"}})
+    r = ses.search_image('test1.jpg', pre_filter={"term": {"metadata.tenant_id": "bar-2"}})
     assert len(r) == 1
     assert r[0]['metadata'] == metadata2
 
-    r = ses.search_image('test1.jpg', pre_filter={"term": {f'{DOC_TYPE}.metadata.tenant_id': "bar-3"}})
+    r = ses.search_image('test1.jpg', pre_filter={"term": {"metadata.tenant_id": "bar-3"}})
     assert len(r) == 0
 
 

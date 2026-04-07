@@ -12,15 +12,11 @@ DOC_TYPE = 'image'
 MAPPINGS = {
     "mappings": {
         "properties": {
-            DOC_TYPE: {
+            "path": {"type": "keyword"},
+            "metadata": {
                 "properties": {
-                    "path": {"type": "keyword"},
-                    "metadata": {
-                        "properties": {
-                            "tenant_id": {"type": "keyword"},
-                            "project_id": {"type": "keyword"},
-                        }
-                    }
+                    "tenant_id": {"type": "keyword"},
+                    "project_id": {"type": "keyword"},
                 }
             }
         }
@@ -112,6 +108,6 @@ def _metadata(tenant_id, project_id):
 
 def _nested_filter(tenant_id, project_id):
     return [
-        {"term": {"image.metadata.tenant_id": tenant_id}},
-        {"term": {"image.metadata.project_id": project_id}},
+        {"term": {"metadata.tenant_id": tenant_id}},
+        {"term": {"metadata.project_id": project_id}},
     ]
