@@ -187,7 +187,8 @@ class SignatureDatabaseBase:
 
         self.gis = ImageSignature(n=n_grid, crop_percentiles=crop_percentile, *signature_args, **signature_kwargs)
 
-    def add_image(self, path, img=None, bytestream=False, metadata=None, refresh_after=False):
+    def add_image(self, path: str, img: np.ndarray | None = None, bytestream: bool = False,
+                  metadata: dict | None = None, refresh_after: bool = False) -> None:
         """Add a single image to the database
 
         Args:
@@ -208,7 +209,8 @@ class SignatureDatabaseBase:
         rec = make_record(path, self.gis, self.k, self.N, img=img, bytestream=bytestream, metadata=metadata)
         self.insert_single_record(rec, refresh_after=refresh_after)
 
-    def search_image(self, path, all_orientations=False, bytestream=False, pre_filter=None):
+    def search_image(self, path: str, all_orientations: bool = False, bytestream: bool = False,
+                     pre_filter: dict | list | None = None) -> list[dict]:
         """Search for matches
 
         Args:
