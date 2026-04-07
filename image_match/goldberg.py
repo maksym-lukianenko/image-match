@@ -254,6 +254,8 @@ class ImageSignature:
             else:
                 return rgb2gray(arr)
         elif isinstance(image_or_path, np.ndarray):
+            if image_or_path.ndim == 2:
+                return image_or_path
             return rgb2gray(image_or_path)
         else:
             raise TypeError('Path or image required.')
