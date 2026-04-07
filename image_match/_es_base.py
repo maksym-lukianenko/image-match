@@ -1,6 +1,7 @@
 from abc import abstractmethod
 
 import numpy as np
+from elasticsearch import Elasticsearch
 
 from image_match.signature_database_base import SignatureDatabaseBase, normalized_distance
 
@@ -15,8 +16,8 @@ class _SignatureESBase(SignatureDatabaseBase):
         - _search_by_path(path) -> list[dict]
     """
 
-    def __init__(self, es, index='images', doc_type='image', timeout='10s', size=100,
-                 *args, **kwargs):
+    def __init__(self, es: Elasticsearch, index: str = 'images', doc_type: str = 'image',
+                 timeout: str = '10s', size: int = 100, *args, **kwargs):
         self.es = es
         self.index = index
         self.doc_type = doc_type
