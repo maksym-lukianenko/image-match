@@ -17,7 +17,7 @@ class _SignatureESBase(SignatureDatabaseBase):
     """
 
     def __init__(self, es: Elasticsearch, index: str = 'images', doc_type: str = 'image',
-                 timeout: str = '10s', size: int = 100, *args, **kwargs):
+                 timeout: int | str = '10s', size: int = 100, *args, **kwargs):
         self.es = es
         self.index = index
         self.doc_type = doc_type
@@ -27,10 +27,7 @@ class _SignatureESBase(SignatureDatabaseBase):
 
     @abstractmethod
     def _get_doc_source(self, hit: dict) -> dict:
-        """Extract the document fields from a raw ES hit.
-
-        ES7 stores data nested under doc_type; ES8 stores at root.
-        """
+        """Extract the document fields from a raw ES hit."""
         raise NotImplementedError
 
     @abstractmethod
@@ -40,27 +37,25 @@ class _SignatureESBase(SignatureDatabaseBase):
 
     def _format_results(self, res: list, signature: list) -> list[dict]:
         """Compute distances and format ES hits into result dicts."""
-        sigs = np.array([self._get_doc_source(x)['signature'] for x in res])
-
-        if sigs.size == 0:
+        if not res:
             return []
 
+        sources = [self._get_doc_source(x) for x in res]
+        sigs = np.array([s['signature'] for s in sources])
         dists = normalized_distance(sigs, np.array(signature))
 
-        formatted_res = []
-        for x in res:
-            source = self._get_doc_source(x)
-            formatted_res.append({
-                'id': x['_id'],
-                'score': x['_score'],
-                'metadata': source.get('metadata'),
-                'path': source.get('url', source.get('path')),
-            })
+        results = []
+        for hit, source, dist in zip(res, sources, dists):
+            if dist < self.distance_cutoff:
+                results.append({
+                    'id': hit['_id'],
+                    'score': hit['_score'],
+                    'metadata': source.get('metadata'),
+                    'path': source.get('url', source.get('path')),
+                    'dist': dist,
+                })
 
-        for i, row in enumerate(formatted_res):
-            row['dist'] = dists[i]
-
-        return list(filter(lambda y: y['dist'] < self.distance_cutoff, formatted_res))
+        return results
 
     def delete_duplicates(self, path: str) -> None:
         """Delete all but one entry whose path matches the given path."""

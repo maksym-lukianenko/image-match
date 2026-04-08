@@ -362,7 +362,7 @@ def make_record(path, gis, k, N, img=None, bytestream=False, metadata=None):
     words = words_to_int(words)
 
     for i in range(N):
-        record[''.join(['simple_word_', str(i)])] = words[i].tolist()
+        record[f'simple_word_{i}'] = words[i].tolist()
 
     return record
 

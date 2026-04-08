@@ -27,8 +27,8 @@ class SignatureES7(_SignatureESBase):
 
     def _search_by_path(self, path: str) -> list:
         return self.es.search(
-            body={'query': {'match': {'path': path}}},
             index=self.index,
+            body={'query': {'match': {'path': path}}},
         )['hits']['hits']
 
     def search_single_record(self, rec, pre_filter=None):
@@ -36,20 +36,17 @@ class SignatureES7(_SignatureESBase):
         signature = rec.pop('signature')
         rec.pop('metadata', None)
 
-        should = [
-            {'term': {word: rec[word]}}
-            for word in rec
-        ]
-        body = {
-            'query': {'bool': {'should': should}},
-            '_source': {'excludes': ['simple_word_*']},
-        }
+        should = [{'term': {word: rec[word]}} for word in rec]
+        query = {'bool': {'should': should}}
         if pre_filter is not None:
-            body['query']['bool']['filter'] = pre_filter
+            query['bool']['filter'] = pre_filter
 
         res = self.es.search(
             index=self.index,
-            body=body,
+            body={
+                'query': query,
+                '_source': {'excludes': ['simple_word_*']},
+            },
             size=self.size,
             timeout=self.timeout,
         )['hits']['hits']
