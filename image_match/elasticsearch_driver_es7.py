@@ -48,7 +48,7 @@ class SignatureES7(_SignatureESBase):
                 '_source': {'excludes': ['simple_word_*']},
             },
             size=self.size,
-            timeout=self.timeout,
+            request_timeout=self.timeout,
         )['hits']['hits']
 
         return self._format_results(res, signature)

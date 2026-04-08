@@ -47,7 +47,7 @@ class SignatureES8(_SignatureESBase):
             query=query,
             source_excludes=['simple_word_*'],
             size=self.size,
-            timeout=self.timeout,
+            request_timeout=self.timeout,
         )['hits']['hits']
 
         return self._format_results(res, signature)

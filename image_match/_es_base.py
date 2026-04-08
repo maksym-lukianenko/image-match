@@ -17,7 +17,7 @@ class _SignatureESBase(SignatureDatabaseBase):
     """
 
     def __init__(self, es: Elasticsearch, index: str = 'images', doc_type: str = 'image',
-                 timeout: int | str = '10s', size: int = 100, *args, **kwargs):
+                 timeout: int | float = 10, size: int = 100, *args, **kwargs):
         self.es = es
         self.index = index
         self.doc_type = doc_type
