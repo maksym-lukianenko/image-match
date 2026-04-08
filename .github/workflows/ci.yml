@@ -3,6 +3,7 @@ name: CI
 on:
   push:
     branches: [master]
+    tags: ['v*']
   pull_request:
     branches: [master]
 
@@ -74,3 +75,17 @@ jobs:
 
       - name: Run tests
         run: pytest tests/test_goldberg.py tests/test_elasticsearch_driver_es8.py --cov=image_match
+
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [test-es7, test-es8]
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
