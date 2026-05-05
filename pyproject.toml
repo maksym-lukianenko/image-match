@@ -52,5 +52,5 @@ select = ["E", "F", "W", "I"]
 ignore = ["E501"]
 
 [tool.ruff.lint.per-file-ignores]
-"image_match/elasticsearch_driver_qdrant.py" = ["F401"]
-"tests/test_elasticsearch_driver_qdrant.py" = ["F401"]
+"image_match/qdrant_driver.py" = ["F401"]
+"tests/test_qdrant_driver.py" = ["F401"]

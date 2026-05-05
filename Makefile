@@ -51,5 +51,5 @@ test-qdrant:
 	@until curl -sf http://localhost:6333/healthz > /dev/null 2>&1; do sleep 2; done
 	@echo "==> Running Qdrant tests..."
 	.venv/bin/pip install -q -e ".[qdrant,test]"
-	.venv/bin/pytest tests/test_elasticsearch_driver_qdrant.py -v; \
+	.venv/bin/pytest tests/test_qdrant_driver.py -v; \
 		EXIT=$$?; docker stop $(QDRANT_CONTAINER); docker rm $(QDRANT_CONTAINER); exit $$EXIT

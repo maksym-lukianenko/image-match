@@ -5,7 +5,7 @@ import pytest
 from qdrant_client import QdrantClient
 from qdrant_client.models import FieldCondition, Filter, MatchValue
 
-from image_match.elasticsearch_driver_qdrant import SignatureQdrant
+from image_match.qdrant_driver import SignatureQdrant
 from tests.conftest import TEST_IMG_URL1 as test_img_url1
 from tests.conftest import TEST_IMG_URL2 as test_img_url2
 
