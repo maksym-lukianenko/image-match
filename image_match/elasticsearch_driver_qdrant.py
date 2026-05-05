@@ -83,4 +83,32 @@ class SignatureQdrant(SignatureDatabaseBase):
         )
 
     def search_single_record(self, rec: dict, pre_filter: Filter | None = None) -> list[dict]:
-        raise NotImplementedError
+        query_sig = np.array(rec['signature'])
+        vector = [float(x) for x in query_sig]
+
+        response = self.client.query_points(
+            collection_name=self.collection_name,
+            query=vector,
+            limit=self.candidates,
+            query_filter=pre_filter,
+            with_payload=True,
+        )
+        hits = response.points
+
+        if not hits:
+            return []
+
+        stored_sigs = np.array([hit.payload['signature'] for hit in hits])
+        dists = normalized_distance(stored_sigs, query_sig)
+
+        results = []
+        for hit, dist in zip(hits, dists):
+            if dist < self.distance_cutoff:
+                results.append({
+                    'id': hit.id,
+                    'score': hit.score,
+                    'dist': float(dist),
+                    'path': hit.payload['path'],
+                    'metadata': hit.payload.get('metadata'),
+                })
+        return results

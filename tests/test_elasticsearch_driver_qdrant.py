@@ -63,3 +63,67 @@ def test_add_image_as_bytestream(ses):
 
 def test_add_image_with_different_name(ses):
     ses.add_image('custom_name_test', img='test1.jpg', bytestream=False)
+
+
+def test_index_refresh(ses):
+    ses.add_image('test1.jpg')
+    r = ses.search_image('test1.jpg')
+    assert len(r) == 1
+
+
+def test_lookup_from_file(ses):
+    ses.add_image('test1.jpg')
+    r = ses.search_image('test1.jpg')
+    assert len(r) == 1
+    assert r[0]['path'] == 'test1.jpg'
+    assert 'dist' in r[0]
+    assert 'id' in r[0]
+    assert 'score' in r[0]
+
+
+def test_lookup_from_url(ses):
+    ses.add_image('test1.jpg')
+    r = ses.search_image(test_img_url1)
+    assert len(r) == 1
+    assert r[0]['path'] == 'test1.jpg'
+
+
+def test_lookup_from_bytestream(ses):
+    ses.add_image('test1.jpg')
+    with open('test1.jpg', 'rb') as f:
+        r = ses.search_image(f.read(), bytestream=True)
+    assert len(r) == 1
+    assert r[0]['path'] == 'test1.jpg'
+
+
+def test_lookup_with_cutoff(ses):
+    ses.add_image('test2.jpg')
+    ses.distance_cutoff = 0.01
+    r = ses.search_image('test1.jpg')
+    assert len(r) == 0
+
+
+def test_dist_is_close_to_zero_for_identical_image(ses):
+    ses.add_image('test1.jpg')
+    r = ses.search_image('test1.jpg')
+    assert len(r) == 1
+    assert r[0]['dist'] < 0.05
+
+
+def test_similar_images_found_within_default_cutoff(ses):
+    # test2.jpg is a 3-degree rotation of test1.jpg, distance ~0.28
+    ses.add_image('test2.jpg')
+    r = ses.search_image('test1.jpg')
+    assert len(r) == 1
+    assert r[0]['dist'] < 0.45
+    assert r[0]['dist'] > 0.01
+
+
+def test_all_orientations(ses):
+    from PIL import Image
+    Image.open('test1.jpg').rotate(90, expand=True).save('rotated_test1.jpg')
+    ses.add_image('test1.jpg')
+    r = ses.search_image('rotated_test1.jpg', all_orientations=True)
+    assert len(r) == 1
+    assert r[0]['path'] == 'test1.jpg'
+    assert r[0]['dist'] < 0.05
