@@ -50,3 +50,7 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
 ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"image_match/elasticsearch_driver_qdrant.py" = ["F401"]
+"tests/test_elasticsearch_driver_qdrant.py" = ["F401"]

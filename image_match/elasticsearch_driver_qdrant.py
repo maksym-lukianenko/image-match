@@ -1,0 +1,74 @@
+from __future__ import annotations
+
+import uuid
+
+import numpy as np
+from qdrant_client import QdrantClient
+from qdrant_client.models import (
+    Distance,
+    FieldCondition,
+    Filter,
+    FilterSelector,
+    MatchValue,
+    PayloadSchemaType,
+    PointIdsList,
+    PointStruct,
+    VectorParams,
+)
+
+from image_match.signature_database_base import SignatureDatabaseBase, normalized_distance
+
+
+class SignatureQdrant(SignatureDatabaseBase):
+    """Image signature storage and search backed by Qdrant vector database.
+
+    Each image is stored as a Qdrant point whose vector is the raw Goldberg
+    signature cast to float32.  ANN retrieval via HNSW produces candidates;
+    the exact normalized_distance formula (identical to the ES drivers) is
+    then applied in Python.  Distances returned are byte-for-byte the same as
+    those returned by SignatureES7/SignatureES8.
+
+    Example::
+
+        from qdrant_client import QdrantClient
+        from image_match.elasticsearch_driver_qdrant import SignatureQdrant
+
+        client = QdrantClient(url='http://localhost:6333')
+        sq = SignatureQdrant(client, collection_name='images')
+        sq.ensure_collection()
+        sq.add_image('path/to/image.jpg')
+        results = sq.search_image('path/to/query.jpg')
+    """
+
+    def __init__(
+        self,
+        client: QdrantClient,
+        collection_name: str,
+        distance_cutoff: float = 0.45,
+        candidates: int = 100,
+        **kwargs,
+    ) -> None:
+        super().__init__(distance_cutoff=distance_cutoff, **kwargs)
+        self.client = client
+        self.collection_name = collection_name
+        self.candidates = candidates
+
+    def ensure_collection(self, vector_size: int = 648) -> None:
+        """Create the Qdrant collection if it does not already exist."""
+        existing = {c.name for c in self.client.get_collections().collections}
+        if self.collection_name not in existing:
+            self.client.create_collection(
+                collection_name=self.collection_name,
+                vectors_config=VectorParams(size=vector_size, distance=Distance.COSINE),
+            )
+            self.client.create_payload_index(
+                collection_name=self.collection_name,
+                field_name='path',
+                field_schema=PayloadSchemaType.KEYWORD,
+            )
+
+    def insert_single_record(self, rec: dict, refresh_after: bool = False) -> None:
+        raise NotImplementedError
+
+    def search_single_record(self, rec: dict, pre_filter: Filter | None = None) -> list[dict]:
+        raise NotImplementedError
