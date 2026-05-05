@@ -7,7 +7,6 @@ from qdrant_client.models import FieldCondition, Filter, MatchValue
 
 from image_match.qdrant_driver import SignatureQdrant
 from tests.conftest import TEST_IMG_URL1 as test_img_url1
-from tests.conftest import TEST_IMG_URL2 as test_img_url2
 
 COLLECTION_NAME = 'test_qdrant_{}'.format(hashlib.md5(os.urandom(128)).hexdigest()[:12])
 QDRANT_URL = 'http://localhost:6333'
@@ -65,7 +64,7 @@ def test_add_image_with_different_name(ses):
     ses.add_image('custom_name_test', img='test1.jpg', bytestream=False)
 
 
-def test_index_refresh(ses):
+def test_search_returns_inserted_record(ses):
     ses.add_image('test1.jpg')
     r = ses.search_image('test1.jpg')
     assert len(r) == 1

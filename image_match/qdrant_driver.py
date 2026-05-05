@@ -25,13 +25,16 @@ class SignatureQdrant(SignatureDatabaseBase):
     Each image is stored as a Qdrant point whose vector is the raw Goldberg
     signature cast to float32.  ANN retrieval via HNSW produces candidates;
     the exact normalized_distance formula (identical to the ES drivers) is
-    then applied in Python.  Distances returned are byte-for-byte the same as
-    those returned by SignatureES7/SignatureES8.
+    then applied in Python.  Distances are comparable with SignatureES7/SignatureES8.
+
+    Note: The ``score`` field in search results is the backend's raw relevance
+    score (cosine similarity for Qdrant, Lucene score for ES drivers) and is
+    not comparable across backends.  Use ``dist`` for cross-backend comparison.
 
     Example::
 
         from qdrant_client import QdrantClient
-        from image_match.elasticsearch_driver_qdrant import SignatureQdrant
+        from image_match.qdrant_driver import SignatureQdrant
 
         client = QdrantClient(url='http://localhost:6333')
         sq = SignatureQdrant(client, collection_name='images')
@@ -53,8 +56,22 @@ class SignatureQdrant(SignatureDatabaseBase):
         self.collection_name = collection_name
         self.candidates = candidates
 
-    def ensure_collection(self, vector_size: int = 648) -> None:
-        """Create the Qdrant collection if it does not already exist."""
+    def ensure_collection(
+        self,
+        vector_size: int = 648,
+        indexed_fields: dict | None = None,
+    ) -> None:
+        """Create the Qdrant collection if it does not already exist.
+
+        Args:
+            vector_size: Length of the Goldberg signature vector. Must match the
+                n_grid used when generating signatures (default n_grid=9 → 648).
+            indexed_fields: Optional mapping of payload field path to PayloadSchemaType
+                to create payload indexes (e.g. ``{'metadata.tenant_id': PayloadSchemaType.KEYWORD}``).
+                Without an index, metadata filters work but fall back to a full
+                payload scan, which is slow at scale.  Callers are responsible for
+                indexing any metadata keys used in pre_filter queries.
+        """
         existing = {c.name for c in self.client.get_collections().collections}
         if self.collection_name not in existing:
             self.client.create_collection(
@@ -66,6 +83,12 @@ class SignatureQdrant(SignatureDatabaseBase):
                 field_name='path',
                 field_schema=PayloadSchemaType.KEYWORD,
             )
+            for field_path, schema in (indexed_fields or {}).items():
+                self.client.create_payload_index(
+                    collection_name=self.collection_name,
+                    field_name=field_path,
+                    field_schema=schema,
+                )
 
     def insert_single_record(self, rec: dict, refresh_after: bool = False) -> None:
         sig = rec['signature']
@@ -76,10 +99,14 @@ class SignatureQdrant(SignatureDatabaseBase):
                 vector=[float(x) for x in sig],
                 payload={
                     'path': rec['path'],
+                    # Stored in payload (not retrieved via with_vectors=True) because
+                    # Qdrant cosine-normalises vectors at insert time, making the
+                    # retrieved vector != original — which would break normalized_distance.
                     'signature': list(sig),
-                    'metadata': rec.get('metadata') or {},
+                    **({'metadata': rec['metadata']} if rec.get('metadata') else {}),
                 },
             )],
+            wait=refresh_after,
         )
 
     def search_single_record(self, rec: dict, pre_filter: Filter | None = None) -> list[dict]:
@@ -109,7 +136,7 @@ class SignatureQdrant(SignatureDatabaseBase):
                     'score': hit.score,
                     'dist': float(dist),
                     'path': hit.payload['path'],
-                    'metadata': hit.payload.get('metadata'),
+                    **({'metadata': hit.payload['metadata']} if hit.payload.get('metadata') else {}),
                 })
         return results
 
@@ -124,13 +151,21 @@ class SignatureQdrant(SignatureDatabaseBase):
 
     def delete_duplicates(self, path: str) -> None:
         """Keep only the first point whose path matches; delete the rest."""
-        hits, _ = self.client.scroll(
-            collection_name=self.collection_name,
-            scroll_filter=Filter(must=[FieldCondition(key='path', match=MatchValue(value=path))]),
-            with_payload=False,
-            limit=1000,
-        )
-        ids_to_delete = [h.id for h in hits[1:]]
+        path_filter = Filter(must=[FieldCondition(key='path', match=MatchValue(value=path))])
+        all_ids = []
+        offset = None
+        while True:
+            hits, offset = self.client.scroll(
+                collection_name=self.collection_name,
+                scroll_filter=path_filter,
+                with_payload=False,
+                limit=1000,
+                offset=offset,
+            )
+            all_ids.extend(h.id for h in hits)
+            if offset is None:
+                break
+        ids_to_delete = all_ids[1:]
         if ids_to_delete:
             self.client.delete(
                 collection_name=self.collection_name,

@@ -50,7 +50,3 @@ target-version = "py312"
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
 ignore = ["E501"]
-
-[tool.ruff.lint.per-file-ignores]
-"image_match/qdrant_driver.py" = ["F401"]
-"tests/test_qdrant_driver.py" = ["F401"]
