@@ -112,3 +112,27 @@ class SignatureQdrant(SignatureDatabaseBase):
                     'metadata': hit.payload.get('metadata'),
                 })
         return results
+
+    def delete_image(self, path: str) -> None:
+        """Delete all points whose path matches the given path."""
+        self.client.delete(
+            collection_name=self.collection_name,
+            points_selector=FilterSelector(
+                filter=Filter(must=[FieldCondition(key='path', match=MatchValue(value=path))])
+            ),
+        )
+
+    def delete_duplicates(self, path: str) -> None:
+        """Keep only the first point whose path matches; delete the rest."""
+        hits, _ = self.client.scroll(
+            collection_name=self.collection_name,
+            scroll_filter=Filter(must=[FieldCondition(key='path', match=MatchValue(value=path))]),
+            with_payload=False,
+            limit=1000,
+        )
+        ids_to_delete = [h.id for h in hits[1:]]
+        if ids_to_delete:
+            self.client.delete(
+                collection_name=self.collection_name,
+                points_selector=PointIdsList(points=ids_to_delete),
+            )

@@ -127,3 +127,63 @@ def test_all_orientations(ses):
     assert len(r) == 1
     assert r[0]['path'] == 'test1.jpg'
     assert r[0]['dist'] < 0.05
+
+
+def test_add_image_with_metadata(ses):
+    metadata = {'some_info': {'test': 'ok!'}}
+    ses.add_image('test1.jpg', metadata=metadata)
+    r = ses.search_image('test1.jpg')
+    assert r[0]['metadata'] == metadata
+    assert 'path' in r[0]
+    assert 'dist' in r[0]
+    assert 'id' in r[0]
+
+
+def test_lookup_with_filter_by_metadata(ses):
+    ses.add_image('test1.jpg', metadata={'tenant_id': 'foo'})
+    ses.add_image('test2.jpg', metadata={'tenant_id': 'bar'})
+
+    r = ses.search_image(
+        'test1.jpg',
+        pre_filter=Filter(must=[FieldCondition(key='metadata.tenant_id', match=MatchValue(value='foo'))]),
+    )
+    assert len(r) == 1
+    assert r[0]['metadata']['tenant_id'] == 'foo'
+
+    r = ses.search_image(
+        'test1.jpg',
+        pre_filter=Filter(must=[FieldCondition(key='metadata.tenant_id', match=MatchValue(value='bar'))]),
+    )
+    assert len(r) == 1
+    assert r[0]['metadata']['tenant_id'] == 'bar'
+
+    r = ses.search_image(
+        'test1.jpg',
+        pre_filter=Filter(must=[FieldCondition(key='metadata.tenant_id', match=MatchValue(value='nonexistent'))]),
+    )
+    assert len(r) == 0
+
+
+def test_delete_image(ses):
+    ses.add_image('test1.jpg')
+    ses.delete_image('test1.jpg')
+    r = ses.search_image('test1.jpg')
+    assert len(r) == 0
+
+
+def test_duplicate(ses):
+    ses.add_image('test1.jpg')
+    ses.add_image('test1.jpg')
+    r = ses.search_image('test1.jpg')
+    assert len(r) == 2
+    assert all(m['path'] == 'test1.jpg' for m in r)
+
+
+def test_duplicate_removal(ses):
+    for _ in range(5):
+        ses.add_image('test1.jpg')
+    r = ses.search_image('test1.jpg')
+    assert len(r) == 5
+    ses.delete_duplicates('test1.jpg')
+    r = ses.search_image('test1.jpg')
+    assert len(r) == 1
