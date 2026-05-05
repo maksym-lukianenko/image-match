@@ -68,7 +68,19 @@ class SignatureQdrant(SignatureDatabaseBase):
             )
 
     def insert_single_record(self, rec: dict, refresh_after: bool = False) -> None:
-        raise NotImplementedError
+        sig = rec['signature']
+        self.client.upsert(
+            collection_name=self.collection_name,
+            points=[PointStruct(
+                id=str(uuid.uuid4()),
+                vector=[float(x) for x in sig],
+                payload={
+                    'path': rec['path'],
+                    'signature': list(sig),
+                    'metadata': rec.get('metadata') or {},
+                },
+            )],
+        )
 
     def search_single_record(self, rec: dict, pre_filter: Filter | None = None) -> list[dict]:
         raise NotImplementedError

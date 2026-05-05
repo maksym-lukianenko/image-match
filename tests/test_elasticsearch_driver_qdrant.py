@@ -46,3 +46,20 @@ def test_ensure_collection_is_idempotent(qdrant_client):
     sq.ensure_collection()
     sq.ensure_collection()  # must not raise
     qdrant_client.delete_collection(name)
+
+
+def test_add_image_by_path(ses):
+    ses.add_image('test1.jpg')
+
+
+def test_add_image_by_url(ses):
+    ses.add_image(test_img_url1)
+
+
+def test_add_image_as_bytestream(ses):
+    with open('test1.jpg', 'rb') as f:
+        ses.add_image('bytestream_test', img=f.read(), bytestream=True)
+
+
+def test_add_image_with_different_name(ses):
+    ses.add_image('custom_name_test', img='test1.jpg', bytestream=False)
