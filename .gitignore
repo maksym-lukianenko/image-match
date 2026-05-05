@@ -65,3 +65,6 @@ venv/
 
 # IDE
 .idea/
+
+# Git worktrees
+.worktrees/
