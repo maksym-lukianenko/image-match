@@ -1,7 +1,7 @@
 ES7_IMAGE = docker.elastic.co/elasticsearch/elasticsearch:7.17.15
 ES8_IMAGE = docker.elastic.co/elasticsearch/elasticsearch:8.13.0
 ES_CONTAINER = es-test-local
-QDRANT_IMAGE     = qdrant/qdrant:v1.9.7
+QDRANT_IMAGE     = qdrant/qdrant:v1.17.1
 QDRANT_CONTAINER = qdrant-test-local
 
 .PHONY: test test-es7 test-es8 test-qdrant test-unit lint
