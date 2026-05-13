@@ -6,7 +6,7 @@ QDRANT_CONTAINER = qdrant-test-local
 
 .PHONY: test test-es7 test-es8 test-qdrant test-unit lint
 
-test: test-es7 test-es8
+test: test-es7 test-es8 test-qdrant
 
 test-unit:
 	.venv/bin/pytest tests/test_goldberg.py -v

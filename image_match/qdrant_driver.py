@@ -136,7 +136,7 @@ class SignatureQdrant(SignatureDatabaseBase):
                     'score': hit.score,
                     'dist': float(dist),
                     'path': hit.payload['path'],
-                    **({'metadata': hit.payload['metadata']} if hit.payload.get('metadata') else {}),
+                    'metadata': hit.payload.get('metadata'),
                 })
         return results
 
