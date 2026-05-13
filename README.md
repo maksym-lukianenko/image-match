@@ -27,6 +27,9 @@ pip install "image_match[es7] @ git+https://github.com/maksym-lukianenko/image-m
 
 # Elasticsearch 8.x
 pip install "image_match[es8] @ git+https://github.com/maksym-lukianenko/image-match.git@master"
+
+# Qdrant
+pip install "image_match[qdrant] @ git+https://github.com/maksym-lukianenko/image-match.git@master"
 ```
 
 ---
@@ -99,6 +102,22 @@ results = ses.search_image(
 )
 ```
 
+### Store and search with Qdrant
+
+```python
+from qdrant_client import QdrantClient
+from image_match.qdrant_driver import SignatureQdrant
+
+client = QdrantClient(host='localhost', port=6333)
+ses = SignatureQdrant(client=client, collection='images')
+
+ses.add_image('https://example.com/image.jpg')
+results = ses.search_image('https://example.com/similar.jpg')
+# [{'path': '...', 'dist': 0.12, 'score': 0.97, 'id': '...'}]
+```
+
+Distances in results are computed with the same `normalized_distance` formula as the ES drivers and are directly comparable.
+
 ### Backward compatibility
 
 Code using the old `SignatureES` class continues to work with a deprecation warning:
@@ -118,9 +137,10 @@ Requires Docker.
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[es7,test]"
 
-make test-es7   # runs ES 7.x suite
-make test-es8   # runs ES 8.x suite
-make test       # runs both
+make test-es7     # runs ES 7.x suite
+make test-es8     # runs ES 8.x suite
+make test-qdrant  # runs Qdrant suite
+make test         # runs all three
 ```
 
 ---

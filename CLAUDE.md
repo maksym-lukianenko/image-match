@@ -18,13 +18,14 @@ image_match/
     elasticsearch_driver_es7.py  # SignatureES7 — ES 7.x client API (body=, nested doc_type)
     elasticsearch_driver_es8.py  # SignatureES8 — ES 8.x client API (query=, document=, flat structure)
     elasticsearch_driver.py      # Backward-compat re-export; SignatureES is a deprecated factory
+    qdrant_driver.py             # SignatureQdrant — Qdrant vector DB backend (HNSW ANN + Python re-rank)
 tests/
     conftest.py                  # Session fixture: downloads test1.jpg, generates test2.jpg as 3° rotation
     test_goldberg.py
     test_elasticsearch_driver.py           # ES7 tests (uses SignatureES7 + deprecation warning test)
-    test_elasticsearch_driver_es7.py       # ES7 driver tests
     test_elasticsearch_driver_metadata_as_nested.py  # ES7 nested metadata filter tests
     test_elasticsearch_driver_es8.py       # ES8 tests (Elasticsearch(['http://localhost:9200']))
+    test_qdrant_driver.py                  # Qdrant driver tests (QdrantClient on localhost:6333)
 ```
 
 ## Key design decisions
@@ -42,11 +43,12 @@ Requires Docker and a `.venv` with dependencies installed.
 # Set up
 python -m venv .venv && source .venv/bin/activate
 
-make test-es7   # installs [es7,test], spins up ES 7.17.15, runs tests, tears down
-make test-es8   # installs [es8,test], spins up ES 8.13.0, runs tests, tears down
-make test       # both in sequence
-make test-unit  # goldberg tests only (no Docker needed)
-make lint       # ruff check .
+make test-es7     # installs [es7,test], spins up ES 7.17.15, runs tests, tears down
+make test-es8     # installs [es8,test], spins up ES 8.13.0, runs tests, tears down
+make test-qdrant  # installs [qdrant,test], spins up Qdrant v1.17.1, runs tests, tears down
+make test         # all three in sequence
+make test-unit    # goldberg tests only (no Docker needed)
+make lint         # ruff check .
 ```
 
 ## Known gotchas
@@ -56,6 +58,7 @@ make lint       # ruff check .
 - **Test images**: `test1.jpg` fetched from picsum.photos, `test2.jpg` is a 3° rotation of `test1.jpg` (~0.28 distance). This keeps the pair within the default distance cutoff (0.45) but above the tight cutoff (0.01) used in `test_lookup_with_cutoff`. Do not replace `test2.jpg` with an unrelated image — distances will exceed the cutoff and filter tests will fail.
 - **Module-level network calls break pytest collection** — all downloads must be in session-scoped fixtures, never at module scope.
 - **ES 7.17.0 crashes on modern Linux** (cgroupv2 JDK bug) — CI uses 7.17.15+.
+- **Qdrant driver** uses HNSW ANN for candidate retrieval, then re-ranks in Python using the same `normalized_distance` formula as the ES drivers — distances are directly comparable. The `score` field in results is Qdrant's raw cosine relevance, not the normalized distance.
 
 ## Linting
 
