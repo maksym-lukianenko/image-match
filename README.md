@@ -13,13 +13,13 @@ Based on the paper [_An image signature for any kind of image_, Wong et al](http
 ## Requirements
 
 - Python 3.12+
-- Elasticsearch 7.x or 8.x
+- Elasticsearch 7.x or 8.x, **or** Qdrant 1.x
 
 ---
 
 ## Installation
 
-Choose the extra matching your Elasticsearch version:
+Choose the extra matching your backend:
 
 ```bash
 # Elasticsearch 7.x
@@ -108,15 +108,39 @@ results = ses.search_image(
 from qdrant_client import QdrantClient
 from image_match.qdrant_driver import SignatureQdrant
 
-client = QdrantClient(host='localhost', port=6333)
-ses = SignatureQdrant(client=client, collection='images')
+client = QdrantClient(url='http://localhost:6333')
+ses = SignatureQdrant(client=client, collection_name='images')
+
+# Create the collection on first use (idempotent — safe to call every startup)
+ses.ensure_collection()
 
 ses.add_image('https://example.com/image.jpg')
 results = ses.search_image('https://example.com/similar.jpg')
-# [{'path': '...', 'dist': 0.12, 'score': 0.97, 'id': '...'}]
+# [{'path': '...', 'dist': 0.12, 'score': 0.97, 'id': '...', 'metadata': None}]
 ```
 
-Distances in results are computed with the same `normalized_distance` formula as the ES drivers and are directly comparable.
+`dist` is computed with the same `normalized_distance` formula as the ES drivers and is directly comparable across backends. `score` is Qdrant's raw cosine similarity and is **not** comparable with ES scores.
+
+### Search with metadata filter (Qdrant)
+
+Qdrant filters use `qdrant_client.models` objects, not ES-style dicts:
+
+```python
+from qdrant_client.models import FieldCondition, Filter, MatchValue
+
+results = ses.search_image(
+    'path/to/query.jpg',
+    pre_filter=Filter(must=[FieldCondition(key='metadata.tenant_id', match=MatchValue(value='acme'))])
+)
+```
+
+To make metadata filters efficient at scale, index the field when creating the collection:
+
+```python
+from qdrant_client.models import PayloadSchemaType
+
+ses.ensure_collection(indexed_fields={'metadata.tenant_id': PayloadSchemaType.KEYWORD})
+```
 
 ### Backward compatibility
 
@@ -147,4 +171,4 @@ make test         # runs all three
 
 ## CI
 
-GitHub Actions runs both ES7 and ES8 test suites on every push and pull request to `master`.
+GitHub Actions runs the ES7, ES8, and Qdrant test suites on every push and pull request to `master`.
