@@ -71,3 +71,6 @@ venv/
 
 # Claude Code session plans
 docs/superpowers/
+
+# Local test scripts
+scripts/
