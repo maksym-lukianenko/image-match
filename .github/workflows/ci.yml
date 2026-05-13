@@ -42,7 +42,7 @@ jobs:
         run: ruff check .
 
       - name: Run tests
-        run: pytest --cov=image_match --ignore=tests/test_elasticsearch_driver_es8.py
+        run: pytest --cov=image_match --ignore=tests/test_elasticsearch_driver_es8.py --ignore=tests/test_qdrant_driver.py
 
   test-es8:
     name: Tests (Elasticsearch 8.x)
