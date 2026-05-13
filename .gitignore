@@ -68,3 +68,6 @@ venv/
 
 # Git worktrees
 .worktrees/
+
+# Claude Code session plans
+docs/superpowers/
