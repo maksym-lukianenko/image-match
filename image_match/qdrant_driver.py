@@ -95,7 +95,7 @@ class SignatureQdrant(SignatureDatabaseBase):
         self.client.upsert(
             collection_name=self.collection_name,
             points=[PointStruct(
-                id=str(uuid.uuid4()),
+                id=str(uuid.uuid5(uuid.NAMESPACE_URL, rec['path'])),
                 vector=[float(x) for x in sig],
                 payload={
                     'path': rec['path'],

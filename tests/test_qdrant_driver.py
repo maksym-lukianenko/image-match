@@ -1,9 +1,10 @@
 import hashlib
 import os
+import uuid
 
 import pytest
 from qdrant_client import QdrantClient
-from qdrant_client.models import FieldCondition, Filter, MatchValue
+from qdrant_client.models import FieldCondition, Filter, MatchValue, PointStruct
 
 from image_match.qdrant_driver import SignatureQdrant
 from tests.conftest import TEST_IMG_URL1 as test_img_url1
@@ -170,17 +171,29 @@ def test_delete_image(ses):
     assert len(r) == 0
 
 
-def test_duplicate(ses):
+def test_add_image_is_idempotent(ses):
     ses.add_image('test1.jpg')
     ses.add_image('test1.jpg')
     r = ses.search_image('test1.jpg')
-    assert len(r) == 2
-    assert all(m['path'] == 'test1.jpg' for m in r)
+    assert len(r) == 1
+    assert r[0]['path'] == 'test1.jpg'
 
 
-def test_duplicate_removal(ses):
-    for _ in range(5):
-        ses.add_image('test1.jpg')
+def test_duplicate_removal(ses, qdrant_client):
+    # Simulate legacy duplicates (e.g. from a migration that used random UUIDs)
+    # by inserting extra points directly, bypassing add_image.
+    ses.add_image('test1.jpg')
+    sig = ses.gis.generate_signature('test1.jpg')
+    for _ in range(4):
+        qdrant_client.upsert(
+            collection_name=ses.collection_name,
+            points=[PointStruct(
+                id=str(uuid.uuid4()),
+                vector=[float(x) for x in sig],
+                payload={'path': 'test1.jpg', 'signature': [float(x) for x in sig]},
+            )],
+            wait=True,
+        )
     r = ses.search_image('test1.jpg')
     assert len(r) == 5
     ses.delete_duplicates('test1.jpg')
