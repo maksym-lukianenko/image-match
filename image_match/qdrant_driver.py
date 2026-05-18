@@ -13,6 +13,8 @@ from qdrant_client.models import (
     PayloadSchemaType,
     PointIdsList,
     PointStruct,
+    QuantizationSearchParams,
+    SearchParams,
     VectorParams,
 )
 
@@ -119,6 +121,9 @@ class SignatureQdrant(SignatureDatabaseBase):
             limit=self.candidates,
             query_filter=pre_filter,
             with_payload=True,
+            search_params=SearchParams(
+                quantization=QuantizationSearchParams(rescore=True)
+            ),
         )
         hits = response.points
 
